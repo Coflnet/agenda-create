@@ -65,11 +65,12 @@ func clone() {
 	var err error
 	username := os.Getenv("GIT_USERNAME")
 	token := os.Getenv("GIT_TOKEN")
-	auth := &http2.BasicAuth{Username: username, Password: token}
+	log.Info().Msgf("using username: %s, password: %d", username, len(token))
+	auth := http2.BasicAuth{Username: username, Password: token}
 	repo, err = git.PlainClone(path, false, &git.CloneOptions{
-		URL:      fmt.Sprintf("https://github.com/%s/%s.git", organization, repoName),
+		URL:      fmt.Sprintf("https://%s:%s@github.com/%s/%s.git", username, token, organization, repoName),
 		Progress: os.Stdout,
-		Auth:     auth,
+		Auth:     &auth,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msgf("error cloning repo")
