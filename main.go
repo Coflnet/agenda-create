@@ -11,11 +11,12 @@ import (
 	http2 "github.com/go-git/go-git/v5/plumbing/transport/http"
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/rs/zerolog/log"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
-	time "time"
+	"time"
 )
 
 var (
@@ -52,7 +53,7 @@ func initialize() {
 	for today.Weekday() != time.Wednesday {
 		today = today.Add(time.Hour * 24)
 	}
-	filename = fmt.Sprintf("%02d-%02d.md", today.Month(), today.Day())
+	filename = fmt.Sprintf("stakeholder-meeting/%d/%02d-%02d.md", today.Year(), today.Month(), today.Day())
 	branchname = fmt.Sprintf("%02d-%02d", today.Month(), today.Day())
 	fullFilename = filepath.Join(path, filename)
 
@@ -73,7 +74,7 @@ func clone() {
 		Auth:     &auth,
 	})
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error cloning repo")
+		log.Panic().Err(err).Msgf("error cloning repo")
 	}
 }
 
@@ -81,17 +82,17 @@ func addFile() {
 	var err error
 	file, err = os.Create(fullFilename)
 	if err != nil {
-		log.Fatal().Err(err).Msgf("could not create file %s", fullFilename)
+		log.Panic().Err(err).Msgf("could not create file %s", fullFilename)
 	}
 
 	writer := bufio.NewWriter(file)
 	_, err = writer.WriteString("# General\n\n# Skyblock")
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error writing to file")
+		log.Panic().Err(err).Msgf("error writing to file")
 	}
 	err = writer.Flush()
 	if err != nil {
-		log.Fatal().Err(err).Msgf("error writing to file")
+		log.Panic().Err(err).Msgf("error writing to file")
 	}
 }
 
@@ -99,14 +100,14 @@ func branch() {
 	var err error
 	worktree, err = repo.Worktree()
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not get worktree from repo")
+		log.Panic().Err(err).Msg("could not get worktree from repo")
 	}
 	branch := fmt.Sprintf("refs/heads/%s", branchname)
 	b := plumbing.ReferenceName(branch)
 
 	err = worktree.Checkout(&git.CheckoutOptions{Create: true, Force: false, Branch: b})
 	if err != nil {
-		log.Fatal().Err(err).Msgf("could not checkout branch %s", branchname)
+		log.Panic().Err(err).Msgf("could not checkout branch %s", branchname)
 	}
 }
 
@@ -130,7 +131,7 @@ func commit() {
 	})
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not commit")
+		log.Panic().Err(err).Msg("could not commit")
 	}
 }
 
@@ -145,7 +146,7 @@ func push() {
 	})
 
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not push")
+		log.Panic().Err(err).Msg("could not push")
 	}
 }
 
@@ -161,7 +162,7 @@ func pr() {
 	}
 	serialized, err := json.Marshal(requestData)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not serialized request body")
+		log.Panic().Err(err).Msg("could not serialized request body")
 	}
 
 	data := bytes.NewBuffer(serialized)
@@ -173,9 +174,14 @@ func pr() {
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal().Err(err).Msg("pr api request was not successful")
+		log.Panic().Err(err).Msg("pr api request was not successful")
 	}
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Error().Err(err).Msgf("error closing body")
+		}
+	}(resp.Body)
 
 	log.Info().Msgf("response Status: %s", resp.Status)
 	body, _ := ioutil.ReadAll(resp.Body)
