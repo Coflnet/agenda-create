@@ -79,6 +79,15 @@ func clone() {
 }
 
 func addFile() {
+
+    p := filepath.Dir(fullFilename)
+    // if the directory does not exist, create it
+    if _, err := os.Stat(p); os.IsNotExist(err) {
+        log.Info().Msgf("creating directory %s", p)
+        os.MkdirAll(p, os.ModePerm)
+    }
+    
+
 	var err error
 	file, err = os.Create(fullFilename)
 	if err != nil {
