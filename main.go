@@ -54,7 +54,7 @@ func initialize() {
 		today = today.Add(time.Hour * 24)
 	}
 	filename = fmt.Sprintf("stakeholder-meeting/%d/%02d-%02d.md", today.Year(), today.Month(), today.Day())
-	branchname = fmt.Sprintf("%02d-%02d", today.Month(), today.Day())
+	branchname = fmt.Sprintf("%d-%02d-%02d", today.Year(), today.Month(), today.Day())
 	fullFilename = filepath.Join(path, filename)
 
 	organization = os.Getenv("GIT_ORGANIZATION")
