@@ -50,7 +50,7 @@ func main() {
 
 func initialize() {
 	today := time.Now()
-	for today.Weekday() != time.Wednesday {
+	for today.Weekday() != time.Monday {
 		today = today.Add(time.Hour * 24)
 	}
 	filename = fmt.Sprintf("stakeholder-meeting/%d/%02d-%02d.md", today.Year(), today.Month(), today.Day())
