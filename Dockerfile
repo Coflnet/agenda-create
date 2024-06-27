@@ -1,4 +1,4 @@
-FROM golang:1.18.0-alpine3.15 as builder
+FROM registry.suse.com/bci/golang:1.22 as builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ COPY . .
 RUN go build .
 
 
-FROM alpine:3.15.2
+FROM registry.suse.com/bci/bci-micro:15.6
 
 COPY --from=builder /app/agenda-create /usr/local/bin/agenda-create
 
